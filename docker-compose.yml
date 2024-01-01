@@ -1,0 +1,37 @@
+# Version of docker compose. See https://docs.docker.com/compose/compose-file/compose-versioning/#versioning
+version: "3.8"
+
+networks:
+  docker-example:
+    driver: bridge
+
+services:
+
+  mongodb:
+    image: mongo:7.0 # name of image in docker hub
+    container_name: docker-example-mongo
+    ports:
+      - ${MONGO_PORT}:27017 # map listen port of container with port of running computer
+    env_file:
+      - .env
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+    volumes:
+      - ./data/mongo:/data # map folder /data in container with folder ./data/mongo in running computer
+    networks:
+      - docker-example
+
+  application:
+    image: amazoncorretto:17-alpine3.16
+    container_name: docker-example-application
+    env_file:
+      - .env
+      - .env.application
+    depends_on:
+      - mongodb
+    volumes:
+      - ./target:/app
+    command: java -jar /app/docker-example-1.0-SNAPSHOT.jar
+    networks:
+      - docker-example
